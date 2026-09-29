@@ -1,0 +1,147 @@
+/* Themes. Every color, font and corner radius used by style.css comes from
+ * these tokens, so a new look is just a new [data-theme] block. Register it in
+ * THEMES in app.js so it shows up in the theme picker.
+ *
+ * The default theme is Tidepool (pixel merfolk); its component shapes live in pixel.css.
+ * Hexlight is a second pixel theme (spooky purple warlock); its shapes live in hexlight.css.
+ * The bare :root block is only a fallback (Solarized Dark).
+ */
+
+:root,
+[data-theme="solarized-dark"] {
+  --bg: #002b36;          /* base03 */
+  --card: #073642;        /* base02 */
+  --field: #00212b;
+  --line: #164b57;
+  --ink: #93a1a1;         /* base1 */
+  --ink-strong: #eee8d5;  /* base2 */
+  --muted: #657b83;       /* base00 */
+  --accent: #2aa198;      /* cyan */
+  --accent-soft: rgb(42 161 152 / .16);
+  --on-accent: #002b36;
+  --heading: #b58900;     /* yellow */
+  --ok: #859900;          /* green */
+  --warn: #b58900;        /* yellow */
+  --danger: #dc322f;      /* red */
+  --link: #268bd2;        /* blue */
+  --mark-bg: rgb(181 137 0 / .35);
+  --mark-ink: #eee8d5;
+  --backdrop: rgb(0 20 26 / .6);
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "JetBrains Mono", "Fira Code", monospace;
+  color-scheme: dark;
+}
+
+[data-theme="solarized-light"] {
+  --bg: #fdf6e3;          /* base3 */
+  --card: #fffbef;
+  --field: #eee8d5;       /* base2 */
+  --line: #e0d9c3;
+  --ink: #586e75;         /* base01 */
+  --ink-strong: #073642;  /* base02 */
+  --muted: #93a1a1;       /* base1 */
+  --accent: #2aa198;
+  --accent-soft: rgb(42 161 152 / .14);
+  --on-accent: #fdf6e3;
+  --heading: #cb4b16;     /* orange */
+  --ok: #859900;
+  --warn: #b58900;
+  --danger: #dc322f;
+  --link: #268bd2;
+  --mark-bg: rgb(181 137 0 / .3);
+  --mark-ink: #073642;
+  --backdrop: rgb(7 54 66 / .35);
+  color-scheme: light;
+}
+
+[data-theme="parchment"] {
+  --bg: #f4efe6;
+  --card: #fffdf8;
+  --field: #fbf7ef;
+  --line: #e2d8c8;
+  --ink: #2b2420;
+  --ink-strong: #1a1512;
+  --muted: #857a6e;
+  --accent: #8b2e2e;
+  --accent-soft: #f3e1dc;
+  --on-accent: #fff;
+  --heading: #8b2e2e;
+  --ok: #3d7a4a;
+  --warn: #b7791f;
+  --danger: #b33a3a;
+  --link: #8b2e2e;
+  --mark-bg: #f6e27a;
+  --mark-ink: #2b2420;
+  --backdrop: rgb(0 0 0 / .35);
+  color-scheme: light;
+}
+
+[data-theme="tidepool"] {
+  --bg: #0d233d;
+  --card: #17385c;
+  --field: #0f2a47;
+  --line: #2f5f8a;
+  --frame: #f3dfb5;       /* cream dialog-box outline */
+  --ink: #eee6d2;
+  --ink-strong: #fffaf0;
+  --muted: #8fb0cc;
+  --accent: #ff8fab;      /* coral */
+  --accent-2: #5ee6c4;    /* seafoam */
+  --accent-soft: rgb(255 143 171 / .18);
+  --on-accent: #2a1030;
+  --heading: #ffd166;     /* treasure gold */
+  --magic: #c9a0ff;
+  --ok: #7ee081;
+  --warn: #ffd166;
+  --danger: #ff5d73;
+  --link: #7cc8ff;
+  --mark-bg: rgb(255 209 102 / .4);
+  --mark-ink: #fffaf0;
+  --backdrop: rgb(5 15 30 / .7);
+  --btn: #24507a;
+  --btn-edge: #0a1a2e;
+
+  --radius: 0;
+  --radius-sm: 0;
+  --serif: "Tidepool", "Pixelify Sans", Georgia, serif;
+  --sans: "Tidepool", "Pixelify Sans", system-ui, sans-serif;
+  --mono: "VT323", ui-monospace, monospace;
+  color-scheme: dark;
+}
+
+[data-theme="hexlight"] {
+  --bg: #150a20;
+  --card: #241335;
+  --field: #1b0f2a;
+  --line: #4c2a70;
+  --frame: #d4af61;       /* antique-gold grimoire outline */
+  --ink: #d9c9f2;
+  --ink-strong: #f5ecff;
+  --muted: #8a72ad;
+  --accent: #a855f7;      /* violet */
+  --accent-2: #ff4fd8;    /* hex-glow magenta */
+  --accent-soft: rgb(168 85 247 / .18);
+  --on-accent: #1a0f2b;
+  --heading: #d4af61;     /* antique gold */
+  --magic: #ff4fd8;
+  --ok: #8fe3a0;           /* sickly eldritch green */
+  --warn: #e0c14c;
+  --danger: #ff4d6d;
+  --link: #c084fc;
+  --mark-bg: rgb(212 175 97 / .35);
+  --mark-ink: #f5ecff;
+  --backdrop: rgb(10 5 18 / .75);
+  --btn: #3a1f5c;
+  --btn-edge: #0d0616;
+
+  --radius: 0;
+  --radius-sm: 0;
+  --serif: "Hexlight", "Pixelify Sans", Georgia, serif;
+  --sans: "Hexlight", "Pixelify Sans", system-ui, sans-serif;
+  --mono: "VT323", ui-monospace, monospace;
+  color-scheme: dark;
+}

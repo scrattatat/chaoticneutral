@@ -1,0 +1,398 @@
+/* Tidepool: cozy pixel-art merfolk theme.
+ * Colors live in themes.css; this file only reshapes components into chunky
+ * pixel form (notched frames, square pips, sprite icons, underwater scenery).
+ * Everything is scoped to [data-theme="tidepool"] so other themes are untouched.
+ */
+
+@font-face {
+  font-family: "Pixelify Sans";
+  src: url(fonts/PixelifySans.woff2) format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "VT323";
+  src: url(fonts/VT323.woff2) format("woff2");
+  font-display: swap;
+}
+/* "Tidepool" = Pixelify Sans letters + VT323 digits. Pixelify's 5 reads as an S,
+ * which is a problem on a sheet that's mostly numbers. Later faces win for the
+ * characters in their unicode-range. */
+@font-face {
+  font-family: "Tidepool";
+  src: url(fonts/PixelifySans.woff2) format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Tidepool";
+  src: url(fonts/VT323.woff2) format("woff2");
+  unicode-range: U+0030-0039;
+  size-adjust: 128%;
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+[data-theme="tidepool"] {
+  /* Notched pixel frames: four hard shadows leave the corners empty. */
+  --notch-4: 0 -4px 0 0 var(--frame), 0 4px 0 0 var(--frame), -4px 0 0 0 var(--frame), 4px 0 0 0 var(--frame);
+  --notch-2: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line);
+  --notch-btn: 0 -2px 0 0 var(--btn-edge), 0 2px 0 0 var(--btn-edge), -2px 0 0 0 var(--btn-edge), 2px 0 0 0 var(--btn-edge);
+  scrollbar-color: var(--accent-2) var(--field);
+}
+
+[data-theme="tidepool"] body {
+  font-size: 16px;
+  font-variant-ligatures: none; /* Pixelify's "fi" ligature looks like an A */
+  line-height: 1.35;
+  -webkit-font-smoothing: none;
+  background-color: var(--bg);
+  /* Hard-stepped bands instead of a smooth gradient: light from above, dark below. */
+  background-image: linear-gradient(180deg,
+    #1f5277 0 8%, #1b4a6f 8% 18%, #184266 18% 30%, #153a5c 30% 44%,
+    #123251 44% 60%, #0f2a47 60% 78%, #0d233d 78% 100%);
+  background-attachment: fixed;
+}
+[data-theme="tidepool"] ::selection { background: var(--accent); color: var(--on-accent); }
+
+[data-theme="tidepool"] main { position: relative; z-index: 1; }
+
+/* ------------------------------------------------ type */
+[data-theme="tidepool"] h2 { font-size: 17px; letter-spacing: .04em; text-shadow: 2px 2px 0 var(--btn-edge); }
+[data-theme="tidepool"] h2 small { font-size: 13px; text-shadow: none; }
+[data-theme="tidepool"] label { font-size: 13px; letter-spacing: .03em; }
+[data-theme="tidepool"] label > input,
+[data-theme="tidepool"] label > select { font-size: 16px; }
+[data-theme="tidepool"] .stat-label { font-size: 12px; letter-spacing: .02em; }
+[data-theme="tidepool"] .big,
+[data-theme="tidepool"] input.big { font-size: 28px; }
+[data-theme="tidepool"] .ab-mod { font-size: 32px; text-shadow: 2px 2px 0 var(--btn-edge); }
+[data-theme="tidepool"] .ab-label { font-size: 13px; color: var(--accent-2); }
+
+/* ------------------------------------------------ frames */
+[data-theme="tidepool"] .card,
+[data-theme="tidepool"] dialog {
+  border: 0;
+  background: var(--card);
+  box-shadow: var(--notch-4), 8px 8px 0 4px rgb(0 0 0 / .35), inset 0 4px 0 0 rgb(255 255 255 / .06);
+  margin-bottom: 24px;
+}
+[data-theme="tidepool"] .sheet-grid,
+[data-theme="tidepool"] .notes-layout { gap: 24px; }
+[data-theme="tidepool"] .ability,
+[data-theme="tidepool"] .stat {
+  border: 0;
+  background: var(--field);
+  box-shadow: var(--notch-2), inset 0 -3px 0 0 rgb(0 0 0 / .25);
+}
+
+/* ------------------------------------------------ top bar */
+[data-theme="tidepool"] .topbar {
+  background: var(--card);
+  border-bottom: 4px solid var(--frame);
+  box-shadow: 0 4px 0 0 rgb(0 0 0 / .35);
+}
+[data-theme="tidepool"] .topbar h1 {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 26px;
+  text-shadow: 3px 3px 0 var(--btn-edge);
+}
+[data-theme="tidepool"] .topbar h1::before {
+  content: "";
+  width: var(--sprite-mermaid-w); height: var(--sprite-mermaid-h);
+  background: var(--sprite-mermaid) no-repeat;
+  animation: bob 2.4s steps(2) infinite;
+  flex: none;
+}
+@keyframes bob { 50% { transform: translateY(-3px); } }
+
+[data-theme="tidepool"] .tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  box-shadow: none; background: none; margin: 0;
+  font-size: 16px;
+}
+[data-theme="tidepool"] .tab::before {
+  content: "";
+  width: 18px; height: 18px; flex: none;
+  background: no-repeat center / contain;
+  image-rendering: pixelated;
+}
+[data-theme="tidepool"] .tab[data-tab="sheet"]::before { background-image: var(--sprite-shield); }
+[data-theme="tidepool"] .tab[data-tab="turn"]::before { background-image: var(--sprite-star); }
+[data-theme="tidepool"] .tab[data-tab="spells"]::before { background-image: var(--sprite-sparkle); }
+[data-theme="tidepool"] .tab[data-tab="gear"]::before { background-image: var(--sprite-chest); }
+[data-theme="tidepool"] .tab[data-tab="notes"]::before { background-image: var(--sprite-shell); }
+[data-theme="tidepool"] .tab:hover { background: var(--field); transform: translateY(-2px); }
+[data-theme="tidepool"] .tab.active {
+  background: var(--accent); color: var(--on-accent);
+  box-shadow: var(--notch-btn);
+}
+
+/* ------------------------------------------------ controls */
+[data-theme="tidepool"] input,
+[data-theme="tidepool"] select,
+[data-theme="tidepool"] textarea {
+  font-variant-ligatures: none;
+  border: 2px solid var(--line);
+  background: var(--field);
+  box-shadow: inset 3px 3px 0 0 rgb(0 0 0 / .25);
+}
+[data-theme="tidepool"] input:focus,
+[data-theme="tidepool"] select:focus,
+[data-theme="tidepool"] textarea:focus {
+  outline: 0; border-color: var(--accent-2);
+  box-shadow: inset 3px 3px 0 0 rgb(0 0 0 / .25), 0 0 0 2px var(--accent-2);
+}
+[data-theme="tidepool"] input::placeholder,
+[data-theme="tidepool"] textarea::placeholder { color: var(--muted); opacity: .8; }
+
+[data-theme="tidepool"] button {
+  border: 0;
+  margin: 2px;
+  background: var(--btn);
+  color: var(--ink-strong);
+  box-shadow: var(--notch-btn), inset 0 -4px 0 0 rgb(0 0 0 / .3), inset 0 2px 0 0 rgb(255 255 255 / .15);
+  padding: 5px 12px 7px;
+  transition: none;
+}
+[data-theme="tidepool"] button:hover:not(:disabled) { filter: brightness(1.15); }
+[data-theme="tidepool"] button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: var(--notch-btn), inset 0 2px 0 0 rgb(0 0 0 / .3);
+}
+[data-theme="tidepool"] button.primary { background: var(--accent); color: var(--on-accent); }
+[data-theme="tidepool"] button.danger { color: var(--danger); }
+[data-theme="tidepool"] button.ok { color: var(--ok); }
+[data-theme="tidepool"] button.ghost,
+[data-theme="tidepool"] button.icon { background: none; box-shadow: none; }
+[data-theme="tidepool"] button.ghost:hover { background: var(--field); }
+
+/* segmented control */
+[data-theme="tidepool"] .seg { border: 0; box-shadow: var(--notch-btn); gap: 0; overflow: visible; }
+[data-theme="tidepool"] .seg button { margin: 0; box-shadow: none; background: var(--field); color: var(--muted); }
+[data-theme="tidepool"] .seg button.active { background: var(--accent-2); color: var(--on-accent); }
+
+/* checkboxes: square pixels */
+[data-theme="tidepool"] input[type=checkbox] {
+  appearance: none;
+  width: 18px; height: 18px;
+  border: 0; margin: 2px;
+  background: var(--field);
+  box-shadow: 0 0 0 2px var(--muted);
+  cursor: pointer;
+}
+[data-theme="tidepool"] input[type=checkbox]:checked {
+  background: var(--accent-2);
+  box-shadow: 0 0 0 2px var(--accent-2), inset 0 0 0 3px var(--field);
+}
+[data-theme="tidepool"] .big-check { width: 28px !important; height: 28px !important; }
+[data-theme="tidepool"] .big-check:checked { background: var(--heading); box-shadow: 0 0 0 2px var(--heading), inset 0 0 0 4px var(--field); }
+
+/* ------------------------------------------------ pips */
+[data-theme="tidepool"] .pips { gap: 7px; padding: 2px; }
+[data-theme="tidepool"] .pip,
+[data-theme="tidepool"] .pip-btn {
+  width: 14px; height: 14px; margin: 2px;
+  border: 0; border-radius: 0; padding: 0;
+  background: var(--field);
+  box-shadow: 0 0 0 2px var(--muted);
+}
+[data-theme="tidepool"] .pips.res .pip { width: 18px; height: 18px; }
+[data-theme="tidepool"] .pip:active { transform: none; }
+[data-theme="tidepool"] .pip.on {
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent), inset 3px 3px 0 0 rgb(255 255 255 / .45), inset -3px -3px 0 0 rgb(0 0 0 / .2);
+}
+[data-theme="tidepool"] #slots .pip.on,
+[data-theme="tidepool"] #turn-slots .pip.on { background: var(--magic); box-shadow: 0 0 0 2px var(--magic), inset 3px 3px 0 0 rgb(255 255 255 / .45), inset -3px -3px 0 0 rgb(0 0 0 / .2); }
+[data-theme="tidepool"] .pips.res .pip.on { background: var(--accent-2); box-shadow: 0 0 0 2px var(--accent-2), inset 3px 3px 0 0 rgb(255 255 255 / .45), inset -3px -3px 0 0 rgb(0 0 0 / .2); }
+[data-theme="tidepool"] .pips.success .pip.on { background: var(--ok); box-shadow: 0 0 0 2px var(--ok), inset 3px 3px 0 0 rgb(255 255 255 / .4); }
+[data-theme="tidepool"] .pips.fail .pip.on { background: var(--danger); box-shadow: 0 0 0 2px var(--danger), inset 3px 3px 0 0 rgb(255 255 255 / .4); }
+[data-theme="tidepool"] .exhaustion .pip.on { background: var(--warn); box-shadow: 0 0 0 2px var(--warn), inset 3px 3px 0 0 rgb(255 255 255 / .4); }
+
+[data-theme="tidepool"] .pip-btn.prof { background: var(--accent-2); box-shadow: 0 0 0 2px var(--accent-2), inset 3px 3px 0 0 rgb(255 255 255 / .4); }
+[data-theme="tidepool"] .pip-btn.expert {
+  background: var(--heading);
+  box-shadow: 0 0 0 2px var(--heading), 0 0 0 4px var(--card), 0 0 0 6px var(--heading), inset 3px 3px 0 0 rgb(255 255 255 / .45);
+}
+[data-theme="tidepool"] .check-row .pip-btn { margin: 0 6px; }
+
+/* ------------------------------------------------ hp bar: segmented */
+[data-theme="tidepool"] .hp-bar {
+  height: 18px; border: 0; border-radius: 0;
+  background: var(--field);
+  box-shadow: var(--notch-2);
+  margin: 16px 2px;
+}
+[data-theme="tidepool"] #hp-fill,
+[data-theme="tidepool"] #turn-hp-fill {
+  background-color: var(--ok);
+  background-image:
+    linear-gradient(rgb(255 255 255 / .35) 0 4px, transparent 4px 14px, rgb(0 0 0 / .2) 14px),
+    repeating-linear-gradient(90deg, transparent 0 12px, rgb(0 0 0 / .4) 12px 14px);
+  transition: width .4s steps(6);
+}
+[data-theme="tidepool"] #hp-fill.mid, [data-theme="tidepool"] #turn-hp-fill.mid { background-color: var(--warn); }
+[data-theme="tidepool"] #hp-fill.low, [data-theme="tidepool"] #turn-hp-fill.low { background-color: var(--danger); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { filter: brightness(1.4); } }
+
+/* ------------------------------------------------ misc components */
+[data-theme="tidepool"] .res-row { border-bottom: 2px dashed var(--line); }
+[data-theme="tidepool"] .slot-lvl { font-size: 22px; text-shadow: 2px 2px 0 var(--btn-edge); }
+[data-theme="tidepool"] #note-list li { border-radius: 0; }
+[data-theme="tidepool"] #note-list li.active { background: var(--accent-soft); box-shadow: inset 4px 0 0 0 var(--accent); }
+[data-theme="tidepool"] #note-text { font-size: 20px; line-height: 1.25; }
+[data-theme="tidepool"] .note-toolbar code { font-size: 16px; }
+[data-theme="tidepool"] .save-status { font-size: 14px; }
+
+[data-theme="tidepool"] .md { font-size: 17px; }
+[data-theme="tidepool"] .md h1 { font-size: 30px; text-shadow: 3px 3px 0 var(--btn-edge); }
+[data-theme="tidepool"] .md h2 { font-size: 22px; border-bottom: 4px solid var(--line); color: var(--heading); }
+[data-theme="tidepool"] .md code { font-size: 18px; border-radius: 0; }
+[data-theme="tidepool"] .md .tag { border-radius: 0; box-shadow: 0 0 0 2px var(--accent-soft); }
+[data-theme="tidepool"] .md blockquote { border-left: 4px solid var(--line); }
+[data-theme="tidepool"] .callout { border-left: 4px solid var(--accent-2); border-radius: 0; background: rgb(94 230 196 / .1); }
+[data-theme="tidepool"] .callout-title { color: var(--accent-2); }
+[data-theme="tidepool"] .md ul { list-style: square; }
+
+/* ------------------------------------------------ underwater scenery */
+.deco { display: none; }
+[data-theme="tidepool"] .deco {
+  display: block;
+  position: fixed; inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+.deco > * { position: absolute; image-rendering: pixelated; }
+.deco .sand {
+  left: 0; right: 0; bottom: 0; height: 28px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 20px, #c9a86a 20px 24px, transparent 24px 44px, #e8cf98 44px 48px) 0 8px / 100% 4px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 32px, #b8955a 32px 36px) 0 16px / 100% 4px no-repeat,
+    #d9bc82;
+  box-shadow: 0 -4px 0 0 #e8cf98;
+}
+.deco .weed {
+  bottom: 20px;
+  width: var(--sprite-weedA-w); height: var(--sprite-weedA-h);
+  background: var(--sprite-weedA);
+  transform-origin: bottom center;
+  animation: sway 1.6s steps(1) infinite;
+}
+@keyframes sway { 50% { background-image: var(--sprite-weedB); } }
+.deco .bubble {
+  bottom: -30px;
+  background: var(--sprite-bubble) center / contain no-repeat;
+  animation: rise 20s steps(90) infinite;
+}
+@keyframes rise {
+  0% { transform: translate(0, 0); opacity: 0; }
+  5% { opacity: .85; }
+  25% { transform: translate(6px, -27vh); }
+  50% { transform: translate(-4px, -55vh); }
+  75% { transform: translate(6px, -82vh); }
+  100% { transform: translate(0, -112vh); opacity: .7; }
+}
+.deco .fish {
+  left: 0;
+  width: var(--sprite-fish-w); height: var(--sprite-fish-h);
+  background: var(--sprite-fish);
+  animation: swim 40s steps(160) infinite;
+}
+.deco .fish.small { width: calc(var(--sprite-fish-w) * .5); height: calc(var(--sprite-fish-h) * .5); background-size: contain; }
+@keyframes swim {
+  0% { transform: translateX(-60px); }
+  48% { transform: translateX(calc(100vw + 60px)); }
+  100% { transform: translateX(calc(100vw + 60px)); }
+}
+.deco .crab {
+  bottom: 12px; left: 0;
+  width: var(--sprite-crabA-w); height: var(--sprite-crabA-h);
+  background: var(--sprite-crabA);
+  animation: scuttle 34s steps(120) infinite alternate, legs .3s steps(1) infinite;
+}
+@keyframes scuttle { from { transform: translateX(10vw); } to { transform: translateX(82vw); } }
+@keyframes legs { 50% { background-image: var(--sprite-crabB); } }
+
+/* floating effect sprites (notes, hearts, stars) */
+.fx-float {
+  position: fixed; z-index: 50; pointer-events: none;
+  image-rendering: pixelated;
+  animation: float-up 1.1s steps(11) forwards;
+}
+@keyframes float-up {
+  0% { transform: translateY(0); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translateY(-56px); opacity: 0; }
+}
+.fx-shake { animation: shake .36s steps(6); }
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-4px, 0); }
+  40% { transform: translate(4px, -2px); }
+  60% { transform: translate(-4px, 2px); }
+  80% { transform: translate(4px, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deco *, [data-theme="tidepool"] .topbar h1::before, [data-theme="tidepool"] #hp-fill.low, [data-theme="tidepool"] #turn-hp-fill.low { animation: none !important; }
+  .deco .bubble { opacity: .5; }
+  .deco .bubble:nth-child(odd) { transform: translateY(-40vh); }
+}
+@media (max-width: 700px) {
+  .deco .weed { display: none; }
+  [data-theme="tidepool"] .topbar h1::before { transform: scale(.8); }
+}
+
+/* feats & class features (expandable entries) */
+[data-theme="tidepool"] .entry { border-bottom: 2px dashed var(--line); }
+[data-theme="tidepool"] .entry summary::before { content: "▶"; font-size: 12px; transition: none; }
+[data-theme="tidepool"] .entry-tag { font-size: 12px; border: 0; box-shadow: var(--notch-2); margin: 0 2px; }
+[data-theme="tidepool"] .entry-auto { color: var(--accent-2); font-size: 14px; }
+[data-theme="tidepool"] .entry-body .md { font-size: 16px; }
+
+/* languages */
+[data-theme="tidepool"] .chips { gap: 12px; padding: 2px; }
+[data-theme="tidepool"] .chip { box-shadow: var(--notch-2); background: var(--field); margin: 2px; }
+[data-theme="tidepool"] .chip::before {
+  content: ""; width: 8px; height: 8px; margin-right: 6px;
+  background: var(--accent-2); box-shadow: inset 2px 2px 0 rgb(255 255 255 / .4);
+}
+[data-theme="tidepool"] .chip button.icon { margin: 0; }
+
+/* list headings + details */
+[data-theme="tidepool"] .list-head { font-size: 12px; }
+[data-theme="tidepool"] .list-detail { box-shadow: var(--notch-2); margin-top: 2px; }
+[data-theme="tidepool"] .list-detail .md { font-size: 16px; }
+[data-theme="tidepool"] .list-toggle { font-size: 14px; }
+
+/* character menu + settings */
+[data-theme="tidepool"] .char-menu-btn,
+[data-theme="tidepool"] .char-item,
+[data-theme="tidepool"] .char-action { box-shadow: none; background: none; }
+[data-theme="tidepool"] .char-menu-btn:hover,
+[data-theme="tidepool"] .char-item:hover,
+[data-theme="tidepool"] .char-action:hover { background: var(--field); filter: none; }
+[data-theme="tidepool"] .char-menu-btn:active { transform: none; }
+[data-theme="tidepool"] .char-menu-pop {
+  border: 0; box-shadow: var(--notch-4), 8px 8px 0 4px rgb(0 0 0 / .35);
+}
+[data-theme="tidepool"] .char-item.current { background: var(--accent-soft); box-shadow: inset 4px 0 0 0 var(--accent); }
+[data-theme="tidepool"] .char-menu-pop hr { border-top: 2px dashed var(--line); }
+[data-theme="tidepool"] .char-action.danger { color: var(--danger); }
+[data-theme="tidepool"] .settings-btn { font-size: 20px; }
+[data-theme="tidepool"] .personality textarea { font-size: 16px; }
+
+/* my turn */
+[data-theme="tidepool"] .tv-hp .hp-bar { margin: 2px; }
+[data-theme="tidepool"] .econ-btn { box-shadow: var(--notch-btn), inset 0 -4px 0 0 rgb(0 0 0 / .3), 0 0 0 2px var(--accent-2); }
+[data-theme="tidepool"] .econ-btn::before { color: var(--accent-2); }
+[data-theme="tidepool"] .econ-btn.used { background: var(--field); box-shadow: var(--notch-btn); }
+[data-theme="tidepool"] .turn-item { border-bottom: 2px dashed var(--line); }
+[data-theme="tidepool"] .ti-main { box-shadow: none; margin: 0; }
+[data-theme="tidepool"] .ti-name { font-size: 17px; }
+[data-theme="tidepool"] .ti-summary { font-size: 15px; }
+[data-theme="tidepool"] .ti-flag { font-size: 13px; }
+[data-theme="tidepool"] .ti-desc { font-size: 16px; }
+[data-theme="tidepool"] .turn-round { font-size: 20px; text-shadow: 2px 2px 0 var(--btn-edge); }

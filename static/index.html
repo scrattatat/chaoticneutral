@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en" data-theme="tidepool">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Character Sheet</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><polygon points='16,16 16,2 28,9' fill='%23e8635f'/><polygon points='16,16 28,9 28,23' fill='%23a52a2a'/><polygon points='16,16 28,23 16,30' fill='%23e8635f'/><polygon points='16,16 16,30 4,23' fill='%23a52a2a'/><polygon points='16,16 4,23 4,9' fill='%23e8635f'/><polygon points='16,16 4,9 16,2' fill='%23a52a2a'/><polygon points='16,2 28,9 28,23 16,30 4,23 4,9' fill='none' stroke='%233d0f0f' stroke-width='2' stroke-linejoin='round'/><path d='M16 16L16 2M16 16L28 9M16 16L28 23M16 16L16 30M16 16L4 23M16 16L4 9' stroke='%233d0f0f' stroke-width='1.3'/></svg>">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="pixel.css">
+  <link rel="stylesheet" href="hexlight.css">
+  <script>try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="char-menu">
+      <button id="char-menu-btn" class="char-menu-btn" aria-haspopup="menu" aria-expanded="false" title="Switch character">
+        <h1 id="title">Character Sheet</h1><span class="caret">▾</span>
+      </button>
+      <div id="char-menu" class="char-menu-pop" role="menu" hidden></div>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="sheet">Sheet</button>
+      <button class="tab" data-tab="turn">My Turn</button>
+      <button class="tab" data-tab="spells">Spells</button>
+      <button class="tab" data-tab="gear">Gear</button>
+      <button class="tab" data-tab="notes">Sessions</button>
+    </nav>
+    <span id="save-status" class="save-status"></span>
+    <select id="theme-picker" class="theme-picker" aria-label="Theme"></select>
+    <button id="btn-settings" class="icon ghost settings-btn" title="Settings for this character" aria-label="Settings">⚙</button>
+  </header>
+
+  <main>
+    <!-- ================= SHEET ================= -->
+    <section id="tab-sheet" class="tab-panel">
+      <div class="card identity">
+        <label class="wide">Name <input data-bind="name" placeholder="Character name"></label>
+        <label>Class <input data-bind="class" placeholder="Wizard"></label>
+        <label>Subclass <input data-bind="subclass"></label>
+        <label>Species <input data-bind="race"></label>
+        <label class="num">Level <input data-bind="level" type="number" min="1" max="20"></label>
+        <label>Background <input data-bind="background"></label>
+        <label>Size <input data-bind="size" placeholder="Medium"></label>
+        <label>Alignment <input data-bind="alignment"></label>
+        <label class="num xp-field">XP <input data-bind="xp" type="number" min="0"></label>
+      </div>
+
+      <div class="sheet-grid">
+        <!-- left column: abilities, saves, skills -->
+        <div class="col">
+          <div class="card">
+            <h2>Abilities</h2>
+            <div id="abilities" class="abilities"></div>
+          </div>
+          <div class="card">
+            <h2>Saving throws</h2>
+            <div id="saves" class="checklist"></div>
+          </div>
+          <div class="card">
+            <h2>Skills <small>click: none → proficient → expert</small></h2>
+            <div id="skills" class="checklist"></div>
+          </div>
+          <div class="card personality">
+            <h2>Personality</h2>
+            <label>Traits <textarea data-bind="traits.personality" rows="2"></textarea></label>
+            <label>Ideals <textarea data-bind="traits.ideals" rows="2"></textarea></label>
+            <label>Bonds <textarea data-bind="traits.bonds" rows="2"></textarea></label>
+            <label>Flaws <textarea data-bind="traits.flaws" rows="2"></textarea></label>
+          </div>
+        </div>
+
+        <!-- right column: combat, attacks, features -->
+        <div class="col">
+          <div class="card">
+            <div class="stat-row">
+              <div class="stat"><span class="stat-label">Armor Class</span><input data-bind="ac" type="number" class="big"></div>
+              <div class="stat"><span class="stat-label">Initiative</span><span class="big" data-calc="initiative"></span>
+                <label class="tiny">misc <input data-bind="initMisc" type="number"></label>
+                <span class="tiny muted" data-calc="initNote"></span></div>
+              <div class="stat"><span class="stat-label">Speed</span><input data-bind="speed" class="big"></div>
+              <div class="stat"><span class="stat-label">Proficiency</span><span class="big" data-calc="prof"></span></div>
+              <div class="stat"><span class="stat-label">Passive Perception</span><span class="big" data-calc="passive"></span></div>
+              <div class="stat"><span class="stat-label">Heroic Inspiration</span><input data-bind="inspiration" type="checkbox" class="big-check"></div>
+            </div>
+          </div>
+
+          <div class="card hp-card">
+            <h2>Hit points</h2>
+            <div class="hp-row">
+              <label class="num">Current <input data-bind="hp.current" type="number" class="big"></label>
+              <span class="hp-sep">/</span>
+              <label class="num">Max <input data-bind="hp.max" type="number" class="big"></label>
+              <label class="num">Temp <input data-bind="hp.temp" type="number" class="big"></label>
+            </div>
+            <div class="hp-bar"><div id="hp-fill"></div></div>
+            <div class="hp-actions">
+              <input id="hp-amount" type="number" min="0" placeholder="amt">
+              <button id="btn-damage" class="danger">Damage</button>
+              <button id="btn-heal" class="ok">Heal</button>
+              <span class="spacer"></span>
+              <button id="btn-short-rest" title="Short rest: roll one hit die + CON and heal">Spend hit die</button>
+              <button id="btn-rest" title="Recharge short-rest features">Short rest</button>
+              <button id="btn-long-rest">Long rest</button>
+            </div>
+            <div class="hp-extra">
+              <label>Hit dice <input data-bind="hitDice.die" placeholder="d8" class="short"></label>
+              <label class="num">Used <input data-bind="hitDice.used" type="number" min="0" class="short"></label>
+              <span class="muted">of <span data-calc="level"></span></span>
+              <span class="spacer"></span>
+              <div class="death-saves">
+                <span>Death saves</span>
+                <span class="ds-group">✓ <span id="ds-success"></span></span>
+                <span class="ds-group">✗ <span id="ds-fail"></span></span>
+              </div>
+            </div>
+            <div class="exhaustion">
+              <span>Exhaustion</span>
+              <span id="exhaustion"></span>
+              <span id="exhaustion-note"></span>
+            </div>
+            <label class="conditions">Conditions <input data-bind="conditions" placeholder="poisoned, prone…"></label>
+          </div>
+
+          <div class="card">
+            <h2>Limited-use features <small>filled = uses left</small></h2>
+            <div id="resources"></div>
+          </div>
+
+          <div class="card">
+            <h2>Weapons &amp; damaging cantrips</h2>
+            <div id="list-attacks"></div>
+          </div>
+
+          <div class="card">
+            <h2>Class features <small>click a feature to read it</small></h2>
+            <div id="class-features"></div>
+          </div>
+
+          <div class="card">
+            <h2>Species traits <small>click a trait to read it</small></h2>
+            <div id="species-traits"></div>
+          </div>
+
+          <div class="card">
+            <h2>Feats <small>click a feat to read it</small></h2>
+            <div id="feats"></div>
+          </div>
+
+          <div class="card">
+            <h2>Languages</h2>
+            <div id="languages"></div>
+            <datalist id="language-options"></datalist>
+          </div>
+
+          <div class="card">
+            <h2>Equipment training &amp; proficiencies</h2>
+            <textarea data-bind="proficiencies" rows="4" placeholder="Armor, weapons, tools…"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MY TURN ================= -->
+    <!-- Everything you can do on your turn in one place. The action lists are
+         built from your spells, attacks, features and resources (see renderTurn). -->
+    <section id="tab-turn" class="tab-panel" hidden>
+      <div class="card turn-vitals">
+        <div class="tv-hp">
+          <div class="tv-hp-row">
+            <span class="stat-label">HP</span>
+            <input data-bind="hp.current" type="number" class="big" aria-label="Current HP">
+            <span class="hp-sep">/</span><span class="big muted" data-calc="hpMax"></span>
+            <label class="tiny">temp <input data-bind="hp.temp" type="number"></label>
+          </div>
+          <div class="hp-bar"><div id="turn-hp-fill" class="hp-fill"></div></div>
+          <div class="hp-actions">
+            <input id="turn-hp-amount" type="number" min="0" placeholder="amt" aria-label="Amount">
+            <button id="turn-damage" class="danger">Damage</button>
+            <button id="turn-heal" class="ok">Heal</button>
+          </div>
+        </div>
+        <div class="stat"><span class="stat-label">AC</span><span class="big" data-calc="ac"></span></div>
+        <div class="stat"><span class="stat-label">Initiative</span><span class="big" data-calc="initiative"></span></div>
+        <div class="stat"><span class="stat-label">Speed</span><span class="tv-speed" data-calc="speed"></span></div>
+        <div class="stat"><span class="stat-label">Spell DC</span><span class="big" data-calc="spellDC"></span></div>
+        <div class="stat"><span class="stat-label">Spell attack</span><span class="big" data-calc="spellAtk"></span></div>
+        <div class="stat"><span class="stat-label">Heroic Insp.</span><input data-bind="inspiration" type="checkbox" class="big-check"></div>
+      </div>
+
+      <div class="card turn-tracker">
+        <div class="econ" id="turn-econ"></div>
+        <div id="turn-conc" class="turn-conc"></div>
+        <div id="turn-msg" class="turn-msg" hidden></div>
+        <span class="spacer"></span>
+        <span id="turn-round" class="turn-round"></span>
+        <button id="turn-next" class="primary" title="Refresh your action, bonus action, reaction and movement">Next turn</button>
+        <button id="turn-end" class="ghost" title="End combat and reset the round counter">End combat</button>
+        <label class="conditions turn-conditions">Conditions <input data-bind="conditions" placeholder="poisoned, prone…"></label>
+      </div>
+
+      <div class="turn-grid">
+        <div class="col">
+          <div class="card">
+            <h2>Spell slots <small>click a pip to spend / recover</small></h2>
+            <div id="turn-slots" class="slots"></div>
+          </div>
+          <div id="turn-lists"></div>
+        </div>
+
+        <div class="col">
+          <div class="card">
+            <h2>Plan for next turn</h2>
+            <textarea data-bind="turnPlan" rows="4" placeholder="Healing Word on whoever drops, then Vicious Mockery the big one…"></textarea>
+          </div>
+          <div class="card">
+            <h2>Limited-use features</h2>
+            <div id="turn-resources"></div>
+          </div>
+          <div class="card turn-log">
+            <h2>Session log <small id="turn-log-note"></small></h2>
+            <div id="turn-log-body"></div>
+            <form id="turn-log-form" class="turn-log-form">
+              <input id="turn-log-input" placeholder="What just happened…" autocomplete="off">
+              <button class="primary">Add</button>
+            </form>
+            <p class="muted tiny-note">Everything you do on this tab (casts, attacks, damage, healing, slots, resources, concentration) is logged here too. Lines go under “What happened” in your newest session note, tagged with the round in combat.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SPELLS ================= -->
+    <section id="tab-spells" class="tab-panel" hidden>
+      <div class="card">
+        <div class="stat-row">
+          <div class="stat"><span class="stat-label">Spellcasting ability</span>
+            <select data-bind="spellAbility">
+              <option value="">—</option>
+              <option value="int">INT</option><option value="wis">WIS</option><option value="cha">CHA</option>
+            </select></div>
+          <div class="stat"><span class="stat-label">Spell save DC</span><span class="big" data-calc="spellDC"></span></div>
+          <div class="stat"><span class="stat-label">Spell attack</span><span class="big" data-calc="spellAtk"></span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Spell slots <small>click a pip to spend / recover</small></h2>
+        <div id="slots" class="slots"></div>
+      </div>
+      <div class="card">
+        <h2>Spells</h2>
+        <div id="list-spells"></div>
+      </div>
+    </section>
+
+    <!-- ================= GEAR ================= -->
+    <section id="tab-gear" class="tab-panel" hidden>
+      <div class="card">
+        <h2>Currency</h2>
+        <div class="currency currency-standard">
+          <label class="num">CP <input data-bind="coins.cp" type="number"></label>
+          <label class="num">SP <input data-bind="coins.sp" type="number"></label>
+          <label class="num">EP <input data-bind="coins.ep" type="number"></label>
+          <label class="num">GP <input data-bind="coins.gp" type="number"></label>
+          <label class="num">PP <input data-bind="coins.pp" type="number"></label>
+        </div>
+        <div class="currency-corporate">
+          <span class="corp-card-icon" aria-hidden="true"></span>
+          <div class="corp-card-text">
+            <strong>Guild card on file.</strong>
+            <span class="muted">Put it on the expense report.</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Inventory <small class="weight-total">total weight: <span data-calc="weight"></span> lb</small></h2>
+        <div id="list-inventory"></div>
+      </div>
+    </section>
+
+    <!-- ================= SESSION NOTES ================= -->
+    <section id="tab-notes" class="tab-panel notes-layout" hidden>
+      <aside class="notes-sidebar card">
+        <button id="btn-new-note" class="primary">+ New session</button>
+        <input id="note-filter" placeholder="Filter…">
+        <ul id="note-list"></ul>
+      </aside>
+      <div class="notes-main card">
+        <div id="note-empty" class="muted">Pick a session or start a new one. Notes are saved as Markdown files, ready for Obsidian.</div>
+        <div id="note-editor" hidden>
+          <div class="note-toolbar">
+            <code id="note-file"></code>
+            <span class="spacer"></span>
+            <div class="seg">
+              <button data-view="edit">Edit</button>
+              <button data-view="split" class="active">Split</button>
+              <button data-view="preview">Preview</button>
+            </div>
+            <button id="btn-delete-note" class="danger ghost">Delete</button>
+          </div>
+          <div class="note-panes split">
+            <textarea id="note-text" spellcheck="true"></textarea>
+            <div id="note-preview" class="md"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="settings-dialog">
+    <form method="dialog">
+      <h2>Settings for <span data-calc="nameOrUnnamed"></span></h2>
+      <p class="muted">Turn off things this campaign doesn't track. They're only hidden, so nothing is lost.</p>
+      <label class="check-row"><input type="checkbox" data-bind="settings.trackXp"> Track experience points (XP)</label>
+      <label class="check-row"><input type="checkbox" data-bind="settings.trackWeight"> Track item weight (encumbrance)</label>
+      <label>Currency <select data-bind="settings.currencyMode">
+        <option value="default">Standard gold tracking</option>
+        <option value="corporate">Corporate card (no personal gold)</option>
+      </select></label>
+      <div class="dialog-actions"><button value="close" class="primary">Done</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="beguile-dialog">
+    <form method="dialog">
+      <h2>Beguiling Magic?</h2>
+      <p>You just cast <strong id="beguile-spell"></strong> with a spell slot.
+        Pick a creature you can see within 60 ft. It makes a <strong>Wisdom save (DC <span id="beguile-dc"></span>)</strong>;
+        on a fail it's Charmed or Frightened (your choice) for 1 minute, repeating the save at the end of each of its turns.</p>
+      <p id="beguile-cost" class="beguile-cost" hidden></p>
+      <div class="dialog-actions">
+        <button value="">Not now</button>
+        <button value="Frightened" class="danger">Frighten</button>
+        <button value="Charmed" class="primary">Charm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirm-dialog">
+    <form method="dialog">
+      <p id="confirm-msg"></p>
+      <div class="dialog-actions">
+        <button value="cancel">Cancel</button>
+        <button value="ok" class="danger">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="sprites.js"></script>
+  <script src="markdown.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
