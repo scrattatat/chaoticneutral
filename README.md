@@ -19,6 +19,11 @@ and all saves work locally without touching the real project. Use
 against Firebase's authorized-domains list, which only includes `localhost`
 by default.
 
+To test locally against the real (production) Firestore data instead of the
+emulator, open `http://localhost:5000/?live=1` — this skips connecting to
+the local Auth/Firestore emulators. Any changes you make while signed in
+this way hit the real database, not a sandbox.
+
 ## Where things are saved
 
 | What | Location |

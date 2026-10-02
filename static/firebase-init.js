@@ -25,8 +25,11 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Local dev: talk to the emulator suite instead of the real project.
-if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+// Local dev: talk to the emulator suite instead of the real project, unless
+// ?live=1 is on the URL (e.g. to test locally against real Firestore data).
+const isLocalHost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+const wantsLive = new URLSearchParams(location.search).has("live");
+if (isLocalHost && !wantsLive) {
   auth.useEmulator("http://localhost:9099", { disableWarnings: true });
   db.useEmulator("localhost", 8080);
 }
@@ -109,7 +112,12 @@ async function listCharacters(uid) {
 async function getCharacter(uid, cid) {
   const doc = await charactersRef(uid).doc(cid).get();
   if (!doc.exists) throw new Error("character not found");
-  return doc.data();
+  // updatedAt is Firestore's own bookkeeping (and a serverTimestamp() sentinel
+  // can briefly read back as a locally-estimated value before the server
+  // confirms it), so it's excluded here rather than folded into character
+  // data and compared for save conflicts.
+  const { updatedAt, ...data } = doc.data();
+  return data;
 }
 
 async function createCharacter(uid, data) {

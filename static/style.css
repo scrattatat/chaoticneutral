@@ -256,8 +256,19 @@ dialog::backdrop { background: var(--backdrop); }
 @media (max-width: 500px) {
   .slots { grid-template-columns: 1fr; }
   main { padding: 12px; }
-  .topbar { padding: 10px 12px; }
+  .topbar { padding: 8px 12px; gap: 6px 10px; }
   .abilities { grid-template-columns: repeat(2, 1fr); }
+  .topbar h1 { font-size: 16px; max-width: 38vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .save-status { font-size: 11px; }
+  .theme-picker { font-size: 11px; padding: 2px 4px; }
+  /* Tabs get their own full-width row and scroll horizontally instead of
+     wrapping into several lines, which is what was eating vertical space. */
+  .tabs {
+    order: 10; width: 100%; flex-wrap: nowrap; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { padding: 6px 10px; font-size: 13px; white-space: nowrap; flex: none; }
 }
 .check-row .pip-btn { margin: 0 4px; }
 

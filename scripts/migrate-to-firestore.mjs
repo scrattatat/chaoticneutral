@@ -11,7 +11,8 @@
 
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
-import admin from "firebase-admin";
+import { initializeApp, applicationDefault } from "firebase-admin/app";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 const [, , uid, dataDirArg] = process.argv;
 if (!uid) {
@@ -20,8 +21,8 @@ if (!uid) {
 }
 const dataDir = path.resolve(dataDirArg || "data");
 
-admin.initializeApp({ credential: admin.credential.applicationDefault() });
-const db = admin.firestore();
+initializeApp({ credential: applicationDefault() });
+const db = getFirestore();
 
 async function migrateCharacters() {
   const charDir = path.join(dataDir, "characters");
@@ -30,7 +31,7 @@ async function migrateCharacters() {
     const cid = file.slice(0, -".json".length);
     const data = JSON.parse(await readFile(path.join(charDir, file), "utf8"));
     await db.collection("users").doc(uid).collection("characters").doc(cid)
-      .set({ ...data, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+      .set({ ...data, updatedAt: FieldValue.serverTimestamp() });
     console.log(`character: ${cid}`);
     await migrateNotes(cid);
   }
@@ -42,7 +43,7 @@ async function migrateNotes(cid) {
   for (const file of files) {
     const content = await readFile(path.join(notesDir, file), "utf8");
     await db.collection("users").doc(uid).collection("characters").doc(cid).collection("notes").doc(file)
-      .set({ content, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+      .set({ content, updatedAt: FieldValue.serverTimestamp() });
     console.log(`  note: ${file}`);
   }
 }
