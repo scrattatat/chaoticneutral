@@ -1,2 +1,4 @@
 data/
-__pycache__/
+*service-account*.json
+.firebase/
+node_modules/

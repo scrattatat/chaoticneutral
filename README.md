@@ -2,32 +2,54 @@
 
 Uses the D&D 2024 rules (5.5e).
 
-A local web app with no dependencies (Python 3.10+ standard library only).
+A static web app (no bundler, no backend) backed by Firebase: phone-number
+sign-in (Firebase Auth) and per-user storage (Firestore). Anyone can sign in
+and gets their own private character list.
+
+## Local development
 
 ```sh
-python3 server.py            # then open http://127.0.0.1:8765
-python3 server.py --port 9000
+npm install -g firebase-tools
+firebase emulators:start     # then open http://127.0.0.1:5000
 ```
+
+The emulator suite serves Hosting + Firestore + Auth together. The Auth
+emulator accepts any phone number with the fixed code `123456`, so you can
+exercise the full sign-in flow without sending real SMS.
 
 ## Where things are saved
 
-| What | Default location | Override |
-|---|---|---|
-| Character sheets | `data/characters/<id>.json`, one per character | `DND_DATA_DIR` |
-| Session notes | `data/notes/<id>/*.md`, one folder per character | `DND_NOTES_DIR` |
-| Deleted characters | `data/trash/` (sheet and notes are moved here, not erased) | |
+| What | Location |
+|---|---|
+| Character sheets | `users/{uid}/characters/{id}` (Firestore) |
+| Session notes | `users/{uid}/characters/{id}/notes/{filename}` (Firestore) |
+| Deleted characters | `users/{uid}/trash/{id}` (sheet and notes are moved here, not erased) |
 
-The `<id>` comes from the character's name when you create them (e.g. `fynne`).
-If you're upgrading from the single-character version, `data/character.json` and any loose notes
-are moved into this layout the first time the server starts.
+The `{id}` comes from the character's name when you create them (e.g. `fynne`).
+Session notes are plain Markdown with YAML frontmatter (`session`, `date`, `title`, `tags`),
+stored as-is in each note's `content` field.
 
-Session notes are plain Markdown with YAML frontmatter (`session`, `date`, `title`, `tags`).
-To write them straight into your Obsidian vault, point `DND_NOTES_DIR` at a vault folder.
-Each character gets a subfolder:
+Access is scoped per signed-in user by `firestore.rules` — nobody can read or write
+another user's `users/{uid}/...` data.
+
+## Deploying
 
 ```sh
-DND_NOTES_DIR=~/Obsidian/Vault/DnD python3 server.py   # -> ~/Obsidian/Vault/DnD/fynne/*.md
+firebase deploy
 ```
+
+Pushing to `main` also deploys automatically via
+`.github/workflows/firebase-hosting-merge.yml` (GitHub Actions).
+
+Before first deploy, in the Firebase console for this project:
+- Authentication → Sign-in method → enable **Phone**.
+- Firestore Database → create a database (Native mode).
+- Project settings → General → Your apps → copy the web app config into
+  `static/firebase-init.js` (replacing the `REPLACE_ME` placeholders).
+
+If you have existing data from the old local-file version, run
+`scripts/migrate-to-firestore.mjs` once to import it (see that file's header
+comment).
 
 ## Characters and settings
 

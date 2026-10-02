@@ -117,16 +117,6 @@ function debounce(fn, ms) {
   d.pending = () => t != null;
   return d;
 }
-async function api(method, url, body) {
-  const res = await fetch(url, {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : {},
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.error || res.statusText);
-  return data;
-}
 function confirmDialog(msg) {
   const dlg = $("#confirm-dialog");
   $("#confirm-msg").textContent = msg;
@@ -161,10 +151,10 @@ async function handleSaveConflict() {
 const saveCharacter = debounce(async () => {
   if (saveConflict) return handleSaveConflict();
   try {
-    const onDisk = await api("GET", charUrl());
+    const onDisk = await DB.getCharacter(UID, CHAR_ID);
     if (lastSynced !== null && JSON.stringify(onDisk) !== lastSynced) return handleSaveConflict();
     const snapshot = JSON.stringify(char);
-    await api("PUT", charUrl(), JSON.parse(snapshot));
+    await DB.saveCharacter(UID, CHAR_ID, JSON.parse(snapshot));
     lastSynced = snapshot;
     status("Saved", "ok");
   } catch (e) {
@@ -1459,7 +1449,7 @@ async function loadTurnLog() {
   label.append(fresh);
   if (!logFile) return paintLog(null);
   try {
-    paintLog((await api("GET", `${notesUrl()}/${encodeURIComponent(logFile)}`)).content);
+    paintLog((await DB.getNote(UID, CHAR_ID, logFile)).content);
   } catch (e) {
     status("Couldn't read the session note: " + e.message, "err");
   }
@@ -1473,9 +1463,8 @@ function appendLog(text) {
     const created = !logFile;
     if (created) logFile = (await createSessionNote()).file;
     await saveNote.flush(); // the Sessions tab might have unsaved typing in this note
-    const url = `${notesUrl()}/${encodeURIComponent(logFile)}`;
-    const next = appendToSection((await api("GET", url)).content, LOG_HEADING, line);
-    await api("PUT", url, { content: next });
+    const next = appendToSection((await DB.getNote(UID, CHAR_ID, logFile)).content, LOG_HEADING, line);
+    await DB.saveNote(UID, CHAR_ID, logFile, next);
     if (currentNote === logFile) { $("#note-text").value = next; renderPreview(); }
     if (created) await loadTurnLog();
     else paintLog(next);
@@ -1598,7 +1587,7 @@ let currentNote = null;
 
 const saveNote = debounce(async (file, content) => {
   try {
-    await api("PUT", `${notesUrl()}/${encodeURIComponent(file)}`, { content });
+    await DB.saveNote(UID, CHAR_ID, file, content);
     status("Note saved", "ok");
     loadNoteList();
   } catch (e) {
@@ -1608,7 +1597,7 @@ const saveNote = debounce(async (file, content) => {
 
 async function loadNoteList() {
   try {
-    notes = await api("GET", notesUrl());
+    notes = await DB.listNotes(UID, CHAR_ID);
   } catch (e) {
     return status("Couldn't load notes: " + e.message, "err");
   }
@@ -1637,7 +1626,7 @@ function renderNoteList() {
 async function openNote(file) {
   saveNote.flush();
   try {
-    const { content } = await api("GET", `${notesUrl()}/${encodeURIComponent(file)}`);
+    const { content } = await DB.getNote(UID, CHAR_ID, file);
     currentNote = file;
     history.replaceState(null, "", `#notes/${encodeURIComponent(file)}`);
     $("#note-empty").hidden = true;
@@ -1693,7 +1682,7 @@ tags:
 ## Open threads
 - [ ]
 `;
-  await api("POST", notesUrl(), { file, content });
+  await DB.createNote(UID, CHAR_ID, file, content);
   await loadNoteList();
   return { file, content };
 }
@@ -1727,10 +1716,10 @@ function setupNotes() {
   });
   $("#btn-delete-note").addEventListener("click", async () => {
     if (!currentNote) return;
-    if (!(await confirmDialog(`Delete "${currentNote}"? This removes the file from disk.`))) return;
+    if (!(await confirmDialog(`Delete "${currentNote}"? This permanently removes the note.`))) return;
     try {
       saveNote.flush();
-      await api("DELETE", `${notesUrl()}/${encodeURIComponent(currentNote)}`);
+      await DB.deleteNote(UID, CHAR_ID, currentNote);
       currentNote = null;
       history.replaceState(null, "", "#notes");
       $("#note-editor").hidden = true;
@@ -1753,13 +1742,12 @@ function setupNotes() {
 // Each character is its own file on the server with its own session notes.
 // Which one is open comes from ?c=<id>, else the last one opened in this browser,
 // else the most recently edited. Switching characters reloads the page.
+let UID = null;
 let CHAR_ID = null;
 let characters = [];
-const charUrl = () => `/api/characters/${encodeURIComponent(CHAR_ID)}`;
-const notesUrl = () => `/api/notes/${encodeURIComponent(CHAR_ID)}`;
 
 async function pickCharacter() {
-  characters = await api("GET", "/api/characters");
+  characters = await DB.listCharacters(UID);
   let id = new URLSearchParams(location.search).get("c");
   if (!characters.some((c) => c.id === id)) {
     try { id = localStorage.getItem("character"); } catch {}
@@ -1768,8 +1756,8 @@ async function pickCharacter() {
     id = [...characters].sort((a, b) => b.mtime - a.mtime)[0]?.id;
   }
   if (!id) {
-    id = (await api("POST", "/api/characters", DEFAULT_CHARACTER())).id;
-    characters = await api("GET", "/api/characters");
+    id = (await DB.createCharacter(UID, DEFAULT_CHARACTER())).id;
+    characters = await DB.listCharacters(UID);
   }
   CHAR_ID = id;
   try { localStorage.setItem("character", id); } catch {}
@@ -1819,7 +1807,7 @@ function renderCharacterMenu() {
       ev.preventDefault();
       const name = $("input", form).value.trim();
       if (!name) return;
-      const { id } = await api("POST", "/api/characters", { ...DEFAULT_CHARACTER(), name });
+      const { id } = await DB.createCharacter(UID, { ...DEFAULT_CHARACTER(), name });
       openCharacter(id, "#sheet");
     });
     add.replaceWith(form);
@@ -1830,10 +1818,10 @@ function renderCharacterMenu() {
   del.textContent = `Delete ${label(current || {})}…`;
   del.addEventListener("click", async () => {
     closeCharacterMenu();
-    const ok = await confirmDialog(`Delete ${label(current || {})}? Their sheet and session notes are moved to data/trash/, not erased.`);
+    const ok = await confirmDialog(`Delete ${label(current || {})}? Their sheet and session notes are moved to trash, not erased.`);
     if (!ok) return;
     saveCharacter.flush(); // no-op if nothing pending
-    await api("DELETE", charUrl());
+    await DB.deleteCharacter(UID, CHAR_ID);
     const next = characters.find((c) => c.id !== CHAR_ID);
     if (next) return openCharacter(next.id, "#sheet");
     try { localStorage.removeItem("character"); } catch {}
@@ -1866,7 +1854,7 @@ async function init() {
   buildStatic();
   try {
     await pickCharacter();
-    const saved = await api("GET", charUrl());
+    const saved = await DB.getCharacter(UID, CHAR_ID);
     lastSynced = JSON.stringify(saved);
     if (saved) char = deepMerge(DEFAULT_CHARACTER(), saved);
   } catch (e) {
@@ -1921,4 +1909,48 @@ async function init() {
   });
 }
 
-init();
+// ---------------------------------------------------------------- sign-in
+function setupLoginForm() {
+  const phoneForm = $("#login-phone-form");
+  const codeForm = $("#login-code-form");
+  const errEl = $("#login-error");
+
+  phoneForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errEl.textContent = "";
+    try {
+      await Auth.sendCode($("#login-phone").value.trim());
+      phoneForm.hidden = true;
+      codeForm.hidden = false;
+      $("#login-code").focus();
+    } catch (err) {
+      errEl.textContent = err.message;
+    }
+  });
+
+  codeForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errEl.textContent = "";
+    try {
+      await Auth.confirmCode($("#login-code").value.trim());
+    } catch (err) {
+      errEl.textContent = err.message;
+    }
+  });
+
+  // Reload rather than tearing down in-page state: init() wires up event
+  // listeners once and isn't designed to run twice in the same page load.
+  $("#btn-sign-out").addEventListener("click", async () => {
+    await Promise.all([saveCharacter.flush(), saveNote.flush()]);
+    await Auth.signOut();
+    location.reload();
+  });
+}
+
+setupLoginForm();
+Auth.onReady((user) => {
+  document.body.classList.toggle("signed-in", !!user);
+  if (!user) return;
+  UID = user.uid;
+  init();
+});
