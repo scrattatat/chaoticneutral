@@ -10,11 +10,14 @@ and gets their own private character list.
 
 ```sh
 npm install -g firebase-tools
-firebase emulators:start     # then open http://127.0.0.1:5000
+firebase emulators:start     # then open http://localhost:5000
 ```
 
 The emulator suite serves Hosting + Firestore + Auth together, so sign-in
-and all saves work locally without touching the real project.
+and all saves work locally without touching the real project. Use
+`localhost`, not `127.0.0.1` — Google sign-in checks the page's domain
+against Firebase's authorized-domains list, which only includes `localhost`
+by default.
 
 ## Where things are saved
 
