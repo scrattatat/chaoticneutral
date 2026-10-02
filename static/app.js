@@ -1,4 +1,5 @@
 "use strict";
+(function () {
 
 // ---------------------------------------------------------------- rules data (D&D 2024 / 5.5e)
 const ABILITIES = [
@@ -1954,3 +1955,5 @@ Auth.onReady((user) => {
   UID = user.uid;
   init();
 });
+
+})();

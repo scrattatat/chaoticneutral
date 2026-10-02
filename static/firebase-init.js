@@ -1,6 +1,10 @@
 // Firebase compat SDK setup: phone-auth + Firestore CRUD helpers.
 // Classic script (not a module), loaded before app.js. Exposes window.Auth
 // and window.DB; app.js owns all DOM/UI logic and only calls into these.
+// Everything else here is wrapped in an IIFE so these internal helper names
+// (saveNote, saveCharacter, etc.) don't leak as globals and collide with
+// app.js's own top-level names of the same kind.
+(function () {
 
 // Your web app's Firebase configuration
 
@@ -20,6 +24,12 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+// Local dev: talk to the emulator suite instead of the real project.
+if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+  auth.useEmulator("http://localhost:9099", { disableWarnings: true });
+  db.useEmulator("localhost", 8080);
+}
 
 // ---------------------------------------------------------------- auth
 let recaptchaVerifier = null;
@@ -185,3 +195,5 @@ window.DB = {
   listCharacters, getCharacter, createCharacter, saveCharacter, deleteCharacter,
   listNotes, getNote, saveNote, createNote, deleteNote,
 };
+
+})();

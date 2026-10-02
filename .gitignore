@@ -2,3 +2,4 @@ data/
 *service-account*.json
 .firebase/
 node_modules/
+*-debug.log
