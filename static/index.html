@@ -15,21 +15,9 @@
   <div id="login-gate">
     <div class="card login-card">
       <h1>Sign in</h1>
-      <form id="login-phone-form">
-        <label>Phone number
-          <input id="login-phone" type="tel" placeholder="+1 555 555 1234" autocomplete="tel" required>
-        </label>
-        <button class="primary" type="submit">Send code</button>
-      </form>
-      <form id="login-code-form" hidden>
-        <label>Verification code
-          <input id="login-code" type="text" inputmode="numeric" autocomplete="one-time-code" required>
-        </label>
-        <button class="primary" type="submit">Verify</button>
-      </form>
+      <button id="btn-google-sign-in" class="primary" type="button">Sign in with Google</button>
       <p id="login-error" class="login-error"></p>
     </div>
-    <div id="recaptcha-container"></div>
   </div>
 
   <header class="topbar">

@@ -2,7 +2,7 @@
 
 Uses the D&D 2024 rules (5.5e).
 
-A static web app (no bundler, no backend) backed by Firebase: phone-number
+A static web app (no bundler, no backend) backed by Firebase: Google
 sign-in (Firebase Auth) and per-user storage (Firestore). Anyone can sign in
 and gets their own private character list.
 
@@ -13,9 +13,8 @@ npm install -g firebase-tools
 firebase emulators:start     # then open http://127.0.0.1:5000
 ```
 
-The emulator suite serves Hosting + Firestore + Auth together. The Auth
-emulator accepts any phone number with the fixed code `123456`, so you can
-exercise the full sign-in flow without sending real SMS.
+The emulator suite serves Hosting + Firestore + Auth together, so sign-in
+and all saves work locally without touching the real project.
 
 ## Where things are saved
 
@@ -42,7 +41,7 @@ Pushing to `main` also deploys automatically via
 `.github/workflows/firebase-hosting-merge.yml` (GitHub Actions).
 
 Before first deploy, in the Firebase console for this project:
-- Authentication → Sign-in method → enable **Phone**.
+- Authentication → Sign-in method → enable **Google**.
 - Firestore Database → create a database (Native mode).
 - Project settings → General → Your apps → copy the web app config into
   `static/firebase-init.js` (replacing the `REPLACE_ME` placeholders).

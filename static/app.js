@@ -1912,28 +1912,12 @@ async function init() {
 
 // ---------------------------------------------------------------- sign-in
 function setupLoginForm() {
-  const phoneForm = $("#login-phone-form");
-  const codeForm = $("#login-code-form");
   const errEl = $("#login-error");
 
-  phoneForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  $("#btn-google-sign-in").addEventListener("click", async () => {
     errEl.textContent = "";
     try {
-      await Auth.sendCode($("#login-phone").value.trim());
-      phoneForm.hidden = true;
-      codeForm.hidden = false;
-      $("#login-code").focus();
-    } catch (err) {
-      errEl.textContent = err.message;
-    }
-  });
-
-  codeForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    errEl.textContent = "";
-    try {
-      await Auth.confirmCode($("#login-code").value.trim());
+      await Auth.signIn();
     } catch (err) {
       errEl.textContent = err.message;
     }

@@ -1,4 +1,4 @@
-// Firebase compat SDK setup: phone-auth + Firestore CRUD helpers.
+// Firebase compat SDK setup: Google sign-in + Firestore CRUD helpers.
 // Classic script (not a module), loaded before app.js. Exposes window.Auth
 // and window.DB; app.js owns all DOM/UI logic and only calls into these.
 // Everything else here is wrapped in an IIFE so these internal helper names
@@ -32,8 +32,7 @@ if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
 }
 
 // ---------------------------------------------------------------- auth
-let recaptchaVerifier = null;
-let pendingConfirmation = null;
+const googleProvider = new firebase.auth.GoogleAuthProvider();
 
 const Auth = {
   onReady(cb) {
@@ -42,22 +41,8 @@ const Auth = {
   get uid() {
     return auth.currentUser?.uid ?? null;
   },
-  async sendCode(phoneNumber) {
-    if (!recaptchaVerifier) {
-      recaptchaVerifier = new firebase.auth.RecaptchaVerifier("recaptcha-container", { size: "invisible" });
-    }
-    try {
-      pendingConfirmation = await auth.signInWithPhoneNumber(phoneNumber, recaptchaVerifier);
-    } catch (e) {
-      recaptchaVerifier.clear();
-      recaptchaVerifier = null;
-      throw e;
-    }
-  },
-  async confirmCode(code) {
-    if (!pendingConfirmation) throw new Error("Request a code first");
-    await pendingConfirmation.confirm(code);
-    pendingConfirmation = null;
+  signIn() {
+    return auth.signInWithPopup(googleProvider);
   },
   signOut() {
     return auth.signOut();
