@@ -24,6 +24,20 @@ emulator, open `http://localhost:5000/?live=1` — this skips connecting to
 the local Auth/Firestore emulators. Any changes you make while signed in
 this way hit the real database, not a sandbox.
 
+## Tests
+
+The D&D rules math (`static/rules.js`: proficiency bonus, ability/skill
+modifiers, exhaustion, resource recharge, rest mechanics) is plain,
+DOM-free JavaScript, unit-tested separately from the app itself:
+
+```sh
+npm install
+npm test
+```
+
+This is dev-only tooling — the deployed app still ships as plain files with
+no build step; `node_modules` isn't part of what Firebase Hosting serves.
+
 ## Where things are saved
 
 | What | Location |

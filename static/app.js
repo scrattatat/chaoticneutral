@@ -1,5 +1,4 @@
-"use strict";
-(function () {
+import * as Rules from "./rules.js";
 
 // ---------------------------------------------------------------- rules data (D&D 2024 / 5.5e)
 const ABILITIES = [
@@ -92,7 +91,6 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const num = (v) => (Number.isFinite(+v) ? +v : 0);
 const fmtMod = (n) => (n >= 0 ? `+${n}` : `${n}`);
-const modOf = (score) => Math.floor((num(score) - 10) / 2);
 
 function getPath(obj, path) {
   return path.split(".").reduce((o, k) => (o == null ? undefined : o[k]), obj);
@@ -252,9 +250,9 @@ function setupUndo() {
   });
 }
 
-const prof = () => 2 + Math.floor((Math.max(1, num(char.level)) - 1) / 4);
-const abilityMod = (ab) => modOf(char.abilities[ab]);
-const skillMod = (key, ab) => abilityMod(ab) + (char.skills[key] || 0) * prof();
+const prof = () => Rules.proficiencyBonus(num(char.level));
+const abilityMod = (ab) => Rules.abilityModifier(num(char.abilities[ab]));
+const skillMod = (key, ab) => Rules.skillModifier(abilityMod(ab), char.skills[key] || 0, prof());
 
 function recalc() {
   const calc = {
@@ -297,9 +295,10 @@ function recalc() {
   }
 
   const ex = num(char.exhaustion);
+  const { d20Penalty, speedPenalty, dead } = Rules.exhaustionEffects(ex);
   const note = $("#exhaustion-note");
-  note.textContent = ex >= 6 ? "Dead" : ex > 0 ? `−${2 * ex} to d20 tests, −${5 * ex} ft speed` : "";
-  note.className = ex >= 6 ? "dead" : ex > 0 ? "bad" : "";
+  note.textContent = dead ? "Dead" : ex > 0 ? `−${d20Penalty} to d20 tests, −${speedPenalty} ft speed` : "";
+  note.className = dead ? "dead" : ex > 0 ? "bad" : "";
 
   const title = char.name || "Character Sheet";
   $("#title").textContent = title;
@@ -655,23 +654,11 @@ function renderLanguages() {
 }
 
 // --- limited-use features (Bardic Inspiration, Channel Divinity, Second Wind…)
-// A resource with `auto: "bardic"` derives its max, die and recharge from the
-// 2024 Bard rules: uses = CHA mod (min 1); d6/d8/d10/d12 at levels 1/5/10/15;
-// Font of Inspiration (level 5+) recharges it on a short rest too.
-const AUTO_RESOURCES = {
-  bardic: () => {
-    const lvl = num(char.level);
-    return {
-      max: Math.max(1, abilityMod("cha")),
-      die: lvl >= 15 ? "d12" : lvl >= 10 ? "d10" : lvl >= 5 ? "d8" : "d6",
-      reset: lvl >= 5 ? "short" : "long",
-    };
-  },
-};
-// College of Glamour (level 3): one use per long rest, added automatically
-// to characters who have the Beguiling Magic feature (see ensureAutoResources).
-AUTO_RESOURCES.beguiling = () => ({ max: 1, reset: "long", die: "" });
-const resolveResource = (r) => ({ ...r, ...(AUTO_RESOURCES[r.auto]?.() ?? {}) });
+// Resource auto-derivation (bardic inspiration's level-based max/die/reset,
+// beguiling magic's one-per-long-rest) lives in rules.js; this just supplies
+// the character context it needs.
+const resourceContext = () => ({ level: num(char.level), chaMod: abilityMod("cha") });
+const resolveResource = (r) => Rules.resolveResource(r, resourceContext());
 let resourceSig = "";
 
 function renderResources() {
@@ -785,9 +772,7 @@ function ensureAutoResources() {
 }
 
 function rechargeResources(kind) {
-  for (const raw of char.resources) {
-    if (kind === "long" || resolveResource(raw).reset === "short") raw.used = 0;
-  }
+  char.resources = Rules.rechargeResources(char.resources, kind, resourceContext());
 }
 
 // Slot levels you have no slots at are hidden; "Edit slots" shows all nine
@@ -975,15 +960,12 @@ function hpAmount() {
   return Math.max(0, v);
 }
 function damage(n) {
-  const hp = char.hp;
-  const fromTemp = Math.min(num(hp.temp), n);
-  hp.temp = num(hp.temp) - fromTemp;
-  hp.current = Math.max(0, num(hp.current) - (n - fromTemp));
+  char.hp = Rules.applyDamage(char.hp, n);
 }
 function heal(n) {
-  const hp = char.hp;
-  if (num(hp.current) === 0 && n > 0) char.deathSaves = { success: 0, fail: 0 };
-  hp.current = Math.min(num(hp.max), num(hp.current) + n);
+  const { hp, clearDeathSaves } = Rules.applyHeal(char.hp, n);
+  char.hp = hp;
+  if (clearDeathSaves) char.deathSaves = { success: 0, fail: 0 };
 }
 
 function setupHp() {
@@ -1006,8 +988,7 @@ function setupHp() {
     const level = num(char.level);
     if (num(char.hitDice.used) >= level) return status("No hit dice left", "err");
     const sides = parseInt(String(char.hitDice.die).replace(/\D/g, ""), 10) || 8;
-    const roll = 1 + Math.floor(Math.random() * sides);
-    const gained = Math.max(0, roll + abilityMod("con"));
+    const { roll, gained } = Rules.rollHitDie(sides, abilityMod("con"));
     char.hitDice.used = num(char.hitDice.used) + 1;
     heal(gained);
     bindAll();
@@ -1023,14 +1004,7 @@ function setupHp() {
 
   $("#btn-long-rest").addEventListener("click", async () => {
     if (!(await confirmDialog("Long rest: restore HP, spell slots and all hit dice, clear death saves, and reduce exhaustion by 1?"))) return;
-    char.hp.current = num(char.hp.max);
-    char.hp.temp = 0;
-    char.deathSaves = { success: 0, fail: 0 };
-    for (const s of Object.values(char.slots)) s.used = 0;
-    char.hitDice.used = 0;
-    char.exhaustion = Math.max(0, num(char.exhaustion) - 1);
-    char.concentration = "";
-    rechargeResources("long");
+    Object.assign(char, Rules.applyLongRest(char));
     bindAll(); renderSlots(); renderDeathSaves(); renderExhaustion(); renderResources(); changed();
     status("Long rest complete", "ok");
   });
@@ -1946,5 +1920,3 @@ Auth.onReady((user) => {
   UID = user.uid;
   init();
 });
-
-})();
