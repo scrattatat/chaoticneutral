@@ -149,7 +149,13 @@ async function handleSaveConflict() {
   if (ok) location.reload();
 }
 
-const saveCharacter = debounce(async () => {
+// Saves are serialised through saveQueue: without this, two saves
+// triggered more than 400ms apart (debounce only delays the *first* one)
+// can overlap on a real network round-trip, so the second one's "is this
+// still the version I last saved" check reads a stale snapshot while the
+// first save is still in flight and spuriously reports a conflict.
+let saveQueue = Promise.resolve();
+async function doSaveCharacter() {
   if (saveConflict) return handleSaveConflict();
   try {
     const onDisk = await DB.getCharacter(UID, CHAR_ID);
@@ -161,7 +167,8 @@ const saveCharacter = debounce(async () => {
   } catch (e) {
     status("Save failed: " + e.message, "err");
   }
-}, 400);
+}
+const saveCharacter = debounce(() => (saveQueue = saveQueue.then(doSaveCharacter)), 400);
 
 function changed() {
   recordUndo();
